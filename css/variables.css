@@ -1,9 +1,9 @@
 :root {
   /* Colors */
-  --color-navy: #0B2545;   /* primary dark anchor — trust, legacy */
+  --color-navy: #0B2545;    /* primary dark anchor — trust, legacy */
   --color-electric: #00A7FF; /* electric blue accent — modern, crypto-friendly */
   --color-orange: #FF7A1F; /* confident, CTA accent */
-  --color-black: #0A0A0A;  /* deep text/contrast */
+  --color-black: #0A0A0A;   /* deep text/contrast */
   --color-neutral-1: #F7F9FB; /* light surfaces */
   --color-muted: #6B7A90;
 
