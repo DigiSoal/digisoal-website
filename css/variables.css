@@ -1,0 +1,25 @@
+:root {
+  /* Colors */
+  --color-navy: #0B2545;   /* primary dark anchor — trust, legacy */
+  --color-electric: #00A7FF; /* electric blue accent — modern, crypto-friendly */
+  --color-orange: #FF7A1F; /* confident, CTA accent */
+  --color-black: #0A0A0A;  /* deep text/contrast */
+  --color-neutral-1: #F7F9FB; /* light surfaces */
+  --color-muted: #6B7A90;
+
+  /* Translucency / Glass */
+  --glass-1: rgba(255,255,255,0.06); /* light, subtle glass */
+  --glass-2: rgba(11,37,69,0.12); /* dark, deeper glass */
+  --card-glass: rgba(0,0,0,0.06); /* card surface glass */
+  --nav-glass: rgba(11,37,69,0.12); /* navigation bar glass */
+  
+  /* Fonts */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-accent: 'Space Mono', monospace;
+  
+  /* Transitions & Animation */
+  --transition-fast: 260ms;
+  --transition-medium: 520ms;
+  --easing: cubic-bezier(.22,.9,.34,1);
+}
