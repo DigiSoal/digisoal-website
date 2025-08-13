@@ -1,174 +1,166 @@
-/*!
- * PhysicsPropsPlugin 3.13.0
- * https://gsap.com
- *
- * @license Copyright 2008-2025, GreenSock. All rights reserved.
- * Subject to the terms at https://gsap.com/standard-license
- * @author: Jack Doyle, jack@greensock.com
-*/
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(global = global || self, factory(global.window = global.window || {}));
+}(this, (function (exports) { 'use strict';
 
-/* eslint-disable */
-var gsap,
-    _coreInitted,
-    _getUnit,
-    _getStyleSaver,
-    _reverting,
-    _getGSAP = function _getGSAP() {
-  return gsap || typeof window !== "undefined" && (gsap = window.gsap) && gsap.registerPlugin && gsap;
-},
-    _round = function _round(value) {
-  return Math.round(value * 10000) / 10000;
-},
-    _bonusValidated = 1,
-    //<name>PhysicsPropsPlugin</name>
-_initCore = function _initCore(core) {
-  gsap = core || _getGSAP();
+	/*!
+	 * PhysicsPropsPlugin 3.13.0
+	 * https://gsap.com
+	 *
+	 * @license Copyright 2008-2025, GreenSock. All rights reserved.
+	 * Subject to the terms at https://gsap.com/standard-license
+	 * @author: Jack Doyle, jack@greensock.com
+	*/
+	var gsap,
+	    _coreInitted,
+	    _getUnit,
+	    _getStyleSaver,
+	    _reverting,
+	    _getGSAP = function _getGSAP() {
+	  return gsap || typeof window !== "undefined" && (gsap = window.gsap) && gsap.registerPlugin && gsap;
+	},
+	    _round = function _round(value) {
+	  return Math.round(value * 10000) / 10000;
+	},
+	    _initCore = function _initCore(core) {
+	  gsap = core || _getGSAP();
 
-  if (!_coreInitted) {
-    _getUnit = gsap.utils.getUnit;
-    _getStyleSaver = gsap.core.getStyleSaver;
+	  if (!_coreInitted) {
+	    _getUnit = gsap.utils.getUnit;
+	    _getStyleSaver = gsap.core.getStyleSaver;
 
-    _reverting = gsap.core.reverting || function () {};
+	    _reverting = gsap.core.reverting || function () {};
 
-    _coreInitted = 1;
-  }
-};
+	    _coreInitted = 1;
+	  }
+	};
 
-var PhysicsProp = function PhysicsProp(target, p, velocity, acceleration, friction, stepsPerTimeUnit) {
-  var cache = target._gsap,
-      curVal = cache.get(target, p);
-  this.p = p;
-  this.set = cache.set(target, p); //setter
+	var PhysicsProp = function PhysicsProp(target, p, velocity, acceleration, friction, stepsPerTimeUnit) {
+	  var cache = target._gsap,
+	      curVal = cache.get(target, p);
+	  this.p = p;
+	  this.set = cache.set(target, p);
+	  this.s = this.val = parseFloat(curVal);
+	  this.u = _getUnit(curVal) || 0;
+	  this.vel = velocity || 0;
+	  this.v = this.vel / stepsPerTimeUnit;
 
-  this.s = this.val = parseFloat(curVal);
-  this.u = _getUnit(curVal) || 0;
-  this.vel = velocity || 0;
-  this.v = this.vel / stepsPerTimeUnit;
+	  if (acceleration || acceleration === 0) {
+	    this.acc = acceleration;
+	    this.a = this.acc / (stepsPerTimeUnit * stepsPerTimeUnit);
+	  } else {
+	    this.acc = this.a = 0;
+	  }
 
-  if (acceleration || acceleration === 0) {
-    this.acc = acceleration;
-    this.a = this.acc / (stepsPerTimeUnit * stepsPerTimeUnit);
-  } else {
-    this.acc = this.a = 0;
-  }
+	  this.fr = 1 - (friction || 0);
+	};
 
-  this.fr = 1 - (friction || 0);
-};
+	var PhysicsPropsPlugin = {
+	  version: "3.13.0",
+	  name: "physicsProps",
+	  register: _initCore,
+	  init: function init(target, value, tween) {
+	    _coreInitted || _initCore();
+	    var data = this,
+	        p;
+	    data.styles = _getStyleSaver && _getStyleSaver(target);
+	    data.target = target;
+	    data.tween = tween;
+	    data.step = 0;
+	    data.sps = 30;
+	    data.vProps = [];
 
-export var PhysicsPropsPlugin = {
-  version: "3.13.0",
-  name: "physicsProps",
-  register: _initCore,
-  init: function init(target, value, tween) {
-    _coreInitted || _initCore();
-    var data = this,
-        p;
-    data.styles = _getStyleSaver && _getStyleSaver(target);
-    data.target = target;
-    data.tween = tween;
-    data.step = 0;
-    data.sps = 30; //steps per second
+	    for (p in value) {
+	      var _value$p = value[p],
+	          velocity = _value$p.velocity,
+	          acceleration = _value$p.acceleration,
+	          friction = _value$p.friction;
 
-    data.vProps = [];
+	      if (velocity || acceleration) {
+	        data.vProps.push(new PhysicsProp(target, p, velocity, acceleration, friction, data.sps));
 
-    for (p in value) {
-      var _value$p = value[p],
-          velocity = _value$p.velocity,
-          acceleration = _value$p.acceleration,
-          friction = _value$p.friction;
+	        data._props.push(p);
 
-      if (velocity || acceleration) {
-        data.vProps.push(new PhysicsProp(target, p, velocity, acceleration, friction, data.sps));
+	        _getStyleSaver && data.styles.save(p);
+	        friction && (data.hasFr = 1);
+	      }
+	    }
+	  },
+	  render: function render(ratio, data) {
+	    var vProps = data.vProps,
+	        tween = data.tween,
+	        target = data.target,
+	        step = data.step,
+	        hasFr = data.hasFr,
+	        sps = data.sps,
+	        i = vProps.length,
+	        time = tween._from ? tween._dur - tween._time : tween._time,
+	        curProp,
+	        steps,
+	        remainder,
+	        j,
+	        tt;
 
-        data._props.push(p);
+	    if (tween._time || !_reverting()) {
+	      if (hasFr) {
+	        time *= sps;
+	        steps = (time | 0) - step;
 
-        _getStyleSaver && data.styles.save(p);
-        friction && (data.hasFr = 1);
-      }
-    }
-  },
-  render: function render(ratio, data) {
-    var vProps = data.vProps,
-        tween = data.tween,
-        target = data.target,
-        step = data.step,
-        hasFr = data.hasFr,
-        sps = data.sps,
-        i = vProps.length,
-        time = tween._from ? tween._dur - tween._time : tween._time,
-        curProp,
-        steps,
-        remainder,
-        j,
-        tt;
+	        if (steps < 0) {
+	          while (i--) {
+	            curProp = vProps[i];
+	            curProp.v = curProp.vel / sps;
+	            curProp.val = curProp.s;
+	          }
 
-    if (tween._time || !_reverting()) {
-      if (hasFr) {
-        time *= sps;
-        steps = (time | 0) - step;
-        /*
-        Note: rounding errors build up if we walk the calculations backward which we used to do like this to maximize performance:
-        while (i--) {
-        	curProp = vProps[i];
-        	j = -steps;
-        	while (j--) {
-        		curProp.val -= curProp.v;
-        		curProp.v /= curProp.fr;
-        		curProp.v -= curProp.a;
-        	}
-        	curProp.set(target, curProp.p, _round(curProp.val + (curProp.v * remainder * curProp.fr)) + curProp.u);
-        }
-        but now for the sake of accuracy (to ensure rewinding always goes back to EXACTLY the same spot), we force the calculations to go forward every time. So if the tween is going backward, we just start from the beginning and iterate. This is only necessary with friction.
-         */
+	          i = vProps.length;
+	          data.step = step = 0;
+	          steps = time | 0;
+	        }
 
-        if (steps < 0) {
-          while (i--) {
-            curProp = vProps[i];
-            curProp.v = curProp.vel / sps;
-            curProp.val = curProp.s;
-          }
+	        remainder = time % 1;
 
-          i = vProps.length;
-          data.step = step = 0;
-          steps = time | 0;
-        }
+	        while (i--) {
+	          curProp = vProps[i];
+	          j = steps;
 
-        remainder = time % 1;
+	          while (j--) {
+	            curProp.v += curProp.a;
+	            curProp.v *= curProp.fr;
+	            curProp.val += curProp.v;
+	          }
 
-        while (i--) {
-          curProp = vProps[i];
-          j = steps;
+	          curProp.set(target, curProp.p, _round(curProp.val + curProp.v * remainder * curProp.fr) + curProp.u);
+	        }
 
-          while (j--) {
-            curProp.v += curProp.a;
-            curProp.v *= curProp.fr;
-            curProp.val += curProp.v;
-          }
+	        data.step += steps;
+	      } else {
+	        tt = time * time * 0.5;
 
-          curProp.set(target, curProp.p, _round(curProp.val + curProp.v * remainder * curProp.fr) + curProp.u);
-        }
+	        while (i--) {
+	          curProp = vProps[i];
+	          curProp.set(target, curProp.p, _round(curProp.s + curProp.vel * time + curProp.acc * tt) + curProp.u);
+	        }
+	      }
+	    } else {
+	      data.styles.revert();
+	    }
+	  },
+	  kill: function kill(property) {
+	    var vProps = this.vProps,
+	        i = vProps.length;
 
-        data.step += steps;
-      } else {
-        tt = time * time * 0.5;
+	    while (i--) {
+	      vProps[i].p === property && vProps.splice(i, 1);
+	    }
+	  }
+	};
+	_getGSAP() && gsap.registerPlugin(PhysicsPropsPlugin);
 
-        while (i--) {
-          curProp = vProps[i];
-          curProp.set(target, curProp.p, _round(curProp.s + curProp.vel * time + curProp.acc * tt) + curProp.u);
-        }
-      }
-    } else {
-      data.styles.revert();
-    }
-  },
-  kill: function kill(property) {
-    var vProps = this.vProps,
-        i = vProps.length;
+	exports.PhysicsPropsPlugin = PhysicsPropsPlugin;
+	exports.default = PhysicsPropsPlugin;
 
-    while (i--) {
-      vProps[i].p === property && vProps.splice(i, 1);
-    }
-  }
-};
-_getGSAP() && gsap.registerPlugin(PhysicsPropsPlugin);
-export { PhysicsPropsPlugin as default };
+	Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
