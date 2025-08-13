@@ -26,6 +26,22 @@
     
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Styles for the new logo images -->
+    <style>
+        .nav-logo-image {
+            height: 40px; /* Adjust height as needed for the navigation bar */
+            width: auto;
+            object-fit: contain;
+        }
+
+        .hero-logo-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
     <script type="application/ld+json">
@@ -53,7 +69,10 @@
     
     <main>
         <nav class="main-nav">
-            <a href="#hero" class="nav-logo">DIGISOAL</a>
+            <!-- Replaced "DIGISOAL" text with a logo image in the navigation bar -->
+            <a href="#hero" class="nav-logo">
+                <img src="assets/logo.png" alt="DIGISOAL Logo" class="nav-logo-image" loading="lazy">
+            </a>
             <button class="nav-toggle" aria-controls="main-menu" aria-expanded="false">
                 <span class="hamburger"></span>
             </button>
@@ -68,7 +87,8 @@
             <div class="glass-panel">
                 <hgroup>
                     <p class="tagline">Digital done right.</p>
-                    <h1>DIGISOAL</h1>
+                    <!-- Replaced "DIGISOAL" heading with a logo image in the hero section -->
+                    <img src="assets/logo.png" alt="DIGISOAL Logo" class="hero-logo-image" loading="lazy">
                     <p class="subtitle">Launch. Comply. Convert. — All in one agency.</p>
                 </hgroup>
                 <button class="cta-button">Ready to launch or level up?</button>
